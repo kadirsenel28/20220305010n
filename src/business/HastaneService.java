@@ -18,7 +18,6 @@ public class HastaneService {
     private Set<String> poliklinikler = new HashSet<>();
 
     public HastaneService() {
-
         doktorEkle(new Doktor(1, "Ahmet Yılmaz", "Kardiyoloji"));
         doktorEkle(new Doktor(2, "Ayşe Demir", "Göz Hastalıkları"));
         doktorEkle(new Doktor(3, "Mehmet Öz", "Kardiyoloji"));
@@ -29,7 +28,6 @@ public class HastaneService {
         doktorEkle(new Doktor(8, "Ahmet Gedik", "Kardiyoloji"));
         doktorEkle(new Doktor(9, "Necati Süren", "Dahiliye"));
         doktorEkle(new Doktor(10, "Bilge Şahin", "Beslenme ve Diyet"));
-
 
         hastaDeposu.ekle(new Hasta(99, "Kadir", "1234"));
     }
@@ -53,7 +51,9 @@ public class HastaneService {
                 .collect(Collectors.toList());
     }
 
-    public List<String> getUygunSaatler(String poliklinik) {
+
+
+    private List<String> getGenelSaatler(String poliklinik) {
         List<String> saatler = new ArrayList<>();
         switch (poliklinik) {
             case "Kardiyoloji":
@@ -63,7 +63,7 @@ public class HastaneService {
                 saatler.add("13:00"); saatler.add("13:30"); saatler.add("14:00");
                 break;
             case "Ortopedi":
-                 saatler.add("14:30"); saatler.add("16:00");
+                saatler.add("14:30"); saatler.add("16:00");
                 break;
             default:
                 saatler.add("09:00"); saatler.add("10:00"); saatler.add("11:00");
@@ -71,6 +71,23 @@ public class HastaneService {
                 break;
         }
         return saatler;
+    }
+
+
+    public List<String> getMusaitSaatler(String poliklinik, String tarih) {
+
+        List<String> musaitSaatler = new ArrayList<>(getGenelSaatler(poliklinik));
+
+
+        List<String> doluSaatler = randevuDeposu.listele().stream()
+                .filter(r -> r.getTarih().equals(tarih) && r.getDoktor().getPoliklinik().equals(poliklinik))
+                .map(Randevu::getSaat)
+                .collect(Collectors.toList());
+
+
+        musaitSaatler.removeAll(doluSaatler);
+
+        return musaitSaatler;
     }
 
     public List<String> getGelecekTarihler() {

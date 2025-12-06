@@ -31,7 +31,7 @@ public class AnaEkran extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // ÜST PANEL
+
         JPanel pnlTop = new JPanel(new BorderLayout());
         pnlTop.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         pnlTop.setBackground(new Color(240, 248, 255));
@@ -42,7 +42,7 @@ public class AnaEkran extends JFrame {
         pnlTop.add(btnCikis, BorderLayout.EAST);
         add(pnlTop, BorderLayout.NORTH);
 
-        // ORTA PANEL
+
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
@@ -72,7 +72,6 @@ public class AnaEkran extends JFrame {
         col2.add(new JLabel(" "));
         JButton btnRandevuAl = new JButton("RANDEVU OLUŞTUR");
         btnRandevuAl.setBackground(new Color(60, 179, 113));
-
         col2.add(btnRandevuAl);
 
 
@@ -95,16 +94,28 @@ public class AnaEkran extends JFrame {
         add(tabs, BorderLayout.CENTER);
 
 
+
+
         btnCikis.addActionListener(e -> { this.dispose(); new LoginEkrani().setVisible(true); });
+
 
         cmbPoliklinik.addActionListener(e -> {
             String secilen = (String) cmbPoliklinik.getSelectedItem();
-            listModelDoktor.clear(); listModelSaat.clear();
+            listModelDoktor.clear();
+
             if(secilen != null && !secilen.equals("-- Bölüm Seçiniz --")) {
                 service.getDoktorlarByPoliklinik(secilen).forEach(listModelDoktor::addElement);
-                service.getUygunSaatler(secilen).forEach(listModelSaat::addElement);
+                saatleriGuncelle();
+            } else {
+                listModelSaat.clear();
             }
         });
+
+
+        cmbTarih.addActionListener(e -> {
+            saatleriGuncelle();
+        });
+
 
         btnRandevuAl.addActionListener(e -> {
             Doktor dr = listDoktorlar.getSelectedValue();
@@ -119,11 +130,26 @@ public class AnaEkran extends JFrame {
             if (service.randevuOlustur(dr, aktifHasta, tarih, saat)) {
                 listModelRandevularim.addElement(new Randevu(dr, aktifHasta, tarih, saat));
                 JOptionPane.showMessageDialog(this, "Randevu Alındı!");
+
+
+                saatleriGuncelle();
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "                    \"Kurallar gereği, 1 hafta içerisinde aynı poliklinikten en fazla 1 randevu alabilirsiniz.\", \n" +
-                        "                    \"Randevu Limiti Aşıldı\",", "Çakışma", JOptionPane.ERROR_MESSAGE);
+                        "HATA: Bu bölümde haftalık randevu limitiniz doldu!\n" +
+                                "Kurallar gereği, 1 hafta içerisinde aynı poliklinikten en fazla 1 randevu alabilirsiniz.",
+                        "Randevu Limiti Aşıldı", JOptionPane.ERROR_MESSAGE);
             }
         });
+    }
+
+
+    private void saatleriGuncelle() {
+        listModelSaat.clear();
+        String secilenPoli = (String) cmbPoliklinik.getSelectedItem();
+        String secilenTarih = (String) cmbTarih.getSelectedItem();
+
+        if (secilenPoli != null && !secilenPoli.equals("-- Bölüm Seçiniz --") && secilenTarih != null) {
+            service.getMusaitSaatler(secilenPoli, secilenTarih).forEach(listModelSaat::addElement);
+        }
     }
 }
